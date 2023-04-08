@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wavee.Audio", "Wavee.Audio\Wavee.Audio.csproj", "{1CFC2572-9FAA-4071-B741-51C66CE92778}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wavee.Audio.Vorbis", "Wavee.Audio.Vorbis\Wavee.Audio.Vorbis.csproj", "{B69B0286-FC74-4C4B-8684-A4019062C64A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wavee.Audio.Play", "Wavee.Audio.Play\Wavee.Audio.Play.csproj", "{77DB6880-78AE-4903-992B-A11FAE110369}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1CFC2572-9FAA-4071-B741-51C66CE92778}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1CFC2572-9FAA-4071-B741-51C66CE92778}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1CFC2572-9FAA-4071-B741-51C66CE92778}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1CFC2572-9FAA-4071-B741-51C66CE92778}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B69B0286-FC74-4C4B-8684-A4019062C64A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B69B0286-FC74-4C4B-8684-A4019062C64A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B69B0286-FC74-4C4B-8684-A4019062C64A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B69B0286-FC74-4C4B-8684-A4019062C64A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{77DB6880-78AE-4903-992B-A11FAE110369}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{77DB6880-78AE-4903-992B-A11FAE110369}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{77DB6880-78AE-4903-992B-A11FAE110369}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{77DB6880-78AE-4903-992B-A11FAE110369}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
