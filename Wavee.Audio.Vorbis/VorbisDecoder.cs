@@ -5,7 +5,6 @@ using Wavee.Audio.Formats;
 using Wavee.Audio.Helpers.Extensions;
 using Wavee.Audio.IO;
 using Wavee.Audio.Vorbis.Decoding;
-using Wavee.Audio.Vorbis.Decoding.Codebooks;
 using Wavee.Audio.Vorbis.Decoding.DspState;
 using Wavee.Audio.Vorbis.Decoding.Floors;
 using Wavee.Audio.Vorbis.Decoding.Map;

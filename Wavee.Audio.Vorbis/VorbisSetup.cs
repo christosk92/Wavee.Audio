@@ -1,5 +1,4 @@
 using Wavee.Audio.Vorbis.Decoding;
-using Wavee.Audio.Vorbis.Decoding.Codebooks;
 using Wavee.Audio.Vorbis.Decoding.Floors;
 using Wavee.Audio.Vorbis.Decoding.Map;
 using Wavee.Audio.Vorbis.Mapping.Mappers;

@@ -5,14 +5,17 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <Version>0.0.1</Version>
+        <Title>Wavee Vorbis</Title>
+        <Authors>Christos Karapasias</Authors>
+        <Description>A vorbis (ogg) decoder written in C#.
+Based on Symphonia (Rust).      </Description>
+        <PackageProjectUrl>https://github.com/christosk92/Wavee.Audio</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/christosk92/Wavee.Audio</RepositoryUrl>
     </PropertyGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\Wavee.Audio\Wavee.Audio.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <PackageReference Include="FftSharp" Version="1.1.6" />
     </ItemGroup>
 
 </Project>

@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
+using Wavee.Audio.Codebooks;
 using Wavee.Audio.IO;
-using Wavee.Audio.Vorbis.Decoding.Codebooks;
 
 namespace Wavee.Audio.Vorbis.Decoding;
 

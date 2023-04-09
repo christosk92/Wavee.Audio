@@ -1,6 +1,6 @@
 ﻿using Wavee.Audio.Codecs;
 
-namespace Wavee.Audio;
+namespace Wavee.Audio.Formats;
 
 public record Track(uint Id,
     CodecParameters CodecParameters,

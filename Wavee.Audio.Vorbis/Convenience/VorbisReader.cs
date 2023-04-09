@@ -1,5 +1,6 @@
-﻿using System.Runtime.InteropServices;
+﻿using  System.Runtime.InteropServices;
 using Wavee.Audio.Codecs;
+using Wavee.Audio.Formats;
 using Wavee.Audio.IO;
 
 namespace Wavee.Audio.Vorbis.Convenience;

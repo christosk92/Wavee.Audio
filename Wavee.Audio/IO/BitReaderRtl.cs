@@ -1,7 +1,7 @@
 ﻿using System.Buffers.Binary;
 using System.Diagnostics;
 using System.Drawing;
-using Wavee.Audio.Vorbis.Decoding.Codebooks;
+using Wavee.Audio.Codebooks;
 
 namespace Wavee.Audio.IO;
 

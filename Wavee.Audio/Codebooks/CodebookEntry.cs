@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace Wavee.Audio.Vorbis.Decoding.Codebooks;
+namespace Wavee.Audio.Codebooks;
 
 public record struct CodebookEntry(uint Value, uint Offset)
 {

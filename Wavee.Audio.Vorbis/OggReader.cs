@@ -6,7 +6,6 @@ using Wavee.Audio.Meta.Metadata;
 using Wavee.Audio.Vorbis.Exception;
 using Wavee.Audio.Vorbis.Logical;
 using Wavee.Audio.Vorbis.Mapping;
-using Wavee.Audio.Vorbis.Mapping.Mappers;
 using Wavee.Audio.Vorbis.Pages;
 
 namespace Wavee.Audio.Vorbis;
@@ -16,7 +15,7 @@ namespace Wavee.Audio.Vorbis;
 ///
 /// <see cref="OggReader"/> implements a demuxer for Xiph's OGG container format.
 /// </summary>
-public sealed class OggReader : IDisposable
+public sealed class OggReader : IFormatReader, IDisposable
 {
     private readonly MediaSourceStream _reader;
     private List<Track> _tracks;
@@ -412,7 +411,7 @@ public sealed class OggReader : IDisposable
     private void DiscardLogicalPacket()
     {
         var page = _pages.Page();
-        if(_streams.TryGetValue(page.Header.Serial, out var stream))
+        if (_streams.TryGetValue(page.Header.Serial, out var stream))
         {
             stream.ConsumePacket();
         }
@@ -421,8 +420,8 @@ public sealed class OggReader : IDisposable
     private Packet? PeekLogicalPacket()
     {
         var page = _pages.Page();
-        
-        if(_streams.TryGetValue(page.Header.Serial, out var stream))
+
+        if (_streams.TryGetValue(page.Header.Serial, out var stream))
         {
             return stream.PeekPacket();
         }

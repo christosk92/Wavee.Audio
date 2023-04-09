@@ -1,5 +1,4 @@
 ﻿using Wavee.Audio.IO;
-using Wavee.Audio.Vorbis.Decoding.Codebooks;
 using Wavee.Audio.Vorbis.Exception;
 
 namespace Wavee.Audio.Vorbis.Decoding.Floors;

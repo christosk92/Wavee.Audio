@@ -417,6 +417,13 @@ public class MediaSourceStream : IReadBytes, ISeekBuffered, IDisposable
         _absPos = newPosition;
         _relPos = 0;
     }
+
+    public ulong SeekBufferedRev(int delta)
+    {
+        if (delta >= int.MaxValue)
+            throw new ArgumentOutOfRangeException(nameof(delta));
+        return SeekBufferedRel(-delta);
+    }
 }
 
 /// <summary>

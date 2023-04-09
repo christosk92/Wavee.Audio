@@ -1,4 +1,4 @@
-namespace Wavee.Audio.Vorbis.Decoding.Codebooks;
+namespace Wavee.Audio.Codebooks;
 
 internal class CodebookValue
 {

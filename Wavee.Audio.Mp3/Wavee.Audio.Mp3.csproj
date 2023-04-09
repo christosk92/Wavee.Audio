@@ -4,12 +4,10 @@
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <Version>0.0.1</Version>
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="MathNet.Numerics" Version="5.0.0" />
+      <ProjectReference Include="..\Wavee.Audio\Wavee.Audio.csproj" />
     </ItemGroup>
 
 </Project>

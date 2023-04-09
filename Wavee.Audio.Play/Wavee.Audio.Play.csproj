@@ -8,11 +8,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Wavee.Audio.Vorbis\Wavee.Audio.Vorbis.csproj" />
+      <PackageReference Include="NAudio" Version="2.1.0" />
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="NAudio" Version="2.1.0" />
+      <ProjectReference Include="..\Wavee.Audio.Vorbis\Wavee.Audio.Vorbis.csproj" />
     </ItemGroup>
 
 </Project>

@@ -1,8 +1,6 @@
-﻿using System.Diagnostics;
-using System.Numerics;
-using Wavee.Audio.Helpers.Extensions;
+﻿using Wavee.Audio.Helpers.Extensions;
 
-namespace Wavee.Audio.Vorbis.Decoding.Codebooks;
+namespace Wavee.Audio.Codebooks;
 
 public class CodebookBuilder
 {

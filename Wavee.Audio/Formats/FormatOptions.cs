@@ -1,4 +1,4 @@
-﻿namespace Wavee.Audio;
+﻿namespace Wavee.Audio.Formats;
 
 /// <summary>
 /// <see cref="FormatOptions"/> is a common set of options that all demuxers use.

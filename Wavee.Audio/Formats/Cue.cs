@@ -1,7 +1,6 @@
-﻿using Wavee.Audio.Formats;
-using Wavee.Audio.Meta;
+﻿using Wavee.Audio.Meta;
 
-namespace Wavee.Audio;
+namespace Wavee.Audio.Formats;
 
 /// <summary>
 /// A <see cref="Cue"/> is a designated point of time within a media stream.
