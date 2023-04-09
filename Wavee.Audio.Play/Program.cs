@@ -4,13 +4,18 @@ using System.Diagnostics;
 using NAudio.Wave;
 using Wavee.Audio.Vorbis.Convenience;
 
-while (true)
+
+ManualResetEvent _waitForPlayback = new ManualResetEvent(false);
+AudioOutput? output = default;
+Task.Run(() =>
 {
     var testFile = "C:\\Users\\ckara\\Downloads\\ifeelyou.ogg";
     var fs = File.Open(testFile, FileMode.Open, FileAccess.Read, FileShare.Read);
     var sw = Stopwatch.StartNew();
-    var reader = new VorbisReader(fs, true);
-    var output = new AudioOutput(reader);
+    var reader = new VorbisReader(fs,
+        true,
+        true);
+    output = new AudioOutput(reader);
     sw.Stop();
 
     while (true)
@@ -24,17 +29,39 @@ while (true)
         }
 
         output.Write(packet);
+        _waitForPlayback.Set();
     }
 
     reader.Dispose();
     output.Dispose();
     GC.Collect();
+});
+
+//Commands:
+//--pause
+//--play
+//--seek 00:00:00.000
+while (true)
+{
+    var input = Console.ReadLine();
+    if (input == "--pause")
+    {
+        output.Pause();
+    }
+    else if (input == "--play")
+    {
+        output.Play();
+    }
+    else if (input.StartsWith("--seek"))
+    {
+        var time = input.Split(" ")[1];
+        var timeSpan = TimeSpan.Parse(time);
+        output.Seek(timeSpan);
+    }
 }
 
-var mn = new ManualResetEvent(false);
-mn.WaitOne();
 
-sealed  class AudioOutput : IDisposable
+sealed class AudioOutput : IDisposable
 {
     private readonly WaveOutEvent _wavePlayer;
     private readonly BufferedWaveProvider _bufferedWaveProvider;
@@ -69,5 +96,20 @@ sealed  class AudioOutput : IDisposable
     {
         _wavePlayer.Dispose();
         _reader.Dispose();
+    }
+
+    public void Pause()
+    {
+        _wavePlayer.Pause();
+    }
+    public void Play()
+    {
+        _wavePlayer.Play();
+    }
+
+    public void Seek(TimeSpan to)
+    {
+        _reader
+            .Seek(to);
     }
 }

@@ -10,11 +10,11 @@ public record Packet
     /// <summary>
     /// The track id.
     /// </summary>
-    private uint _trackId;
+    public uint TrackId { get; }
 
     public Packet(uint trackId, ulong ts, ulong dur, ReadOnlySpan<byte> data)
     {
-        _trackId = trackId;
+        TrackId = trackId;
         Ts = ts;
         Dur = dur;
         Data = data.ToArray();

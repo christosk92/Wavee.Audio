@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using Wavee.Audio.Codecs;
 using Wavee.Audio.Formats;
 using Wavee.Audio.IO;
 using Wavee.Audio.Meta.Metadata;
@@ -216,6 +217,219 @@ public sealed class OggReader : IDisposable
         }
     }
 
+    public SeekedTo Seek(SeekToTime time)
+    {
+        // Get the timestamp of the desired audio frame.
+        uint? serial = default;
+        if (time.TrackId is not null)
+            serial = time.TrackId.Value;
+        else if (DefaultTrack is not null)
+            serial = DefaultTrack.Id;
+        else throw new ArgumentOutOfRangeException(nameof(time.TrackId));
+
+        // Convert the time to a timestamp.
+        if (_streams.TryGetValue(serial.Value, out var stream))
+        {
+            var parameters = stream.CodecParams;
+
+            if (parameters.SampleRate is null)
+                throw new InvalidOperationException("Stream is not  seekable because no sample rate is defined.");
+
+            var ts = new TimeBase(1, parameters.SampleRate.Value)
+                .CalcTimestamp(time.Time);
+
+            if (ts < parameters.StartTs)
+                throw new ArgumentOutOfRangeException(nameof(time.Time));
+
+            if (parameters.NFrames is ulong nFrames)
+            {
+                if (ts > (nFrames + parameters.StartTs))
+                    throw new ArgumentOutOfRangeException(nameof(time.Time));
+            }
+
+            return InternalSeek(ts, serial.Value);
+        }
+
+        throw new ArgumentOutOfRangeException(nameof(time.TrackId));
+    }
+
+    public SeekedTo Seek(SeekToTimestamp ts)
+    {
+        // Frame timestamp given.
+        if (_streams.TryGetValue(ts.TrackId, out var stream))
+        {
+            var parameters = stream.CodecParams;
+
+            // Timestamp lower-bound out-of-range.
+            if (ts.Timestamp < parameters.StartTs)
+            {
+                throw new ArgumentOutOfRangeException(nameof(ts.Timestamp));
+            }
+
+            // Timestamp
+            // upper-bound out-of-range.
+            if (parameters.NFrames is ulong nFrames)
+            {
+                if (ts.Timestamp > (nFrames + parameters.StartTs))
+                {
+                    throw new ArgumentOutOfRangeException(nameof(ts.Timestamp));
+                }
+            }
+
+            return InternalSeek(ts.Timestamp, ts.TrackId);
+        }
+
+        throw new ArgumentOutOfRangeException(nameof(ts.TrackId));
+    }
+
+    private SeekedTo InternalSeek(ulong ts, uint tarckId)
+    {
+        Debug.WriteLine($"Seeking to timestamp {ts} on track {tarckId}");
+
+        // If the reader is seekable, then use the bisection method to coarsely seek to the nearest
+        // page that ends before the required timestamp.
+        if (_reader.CanSeek())
+        {
+            var stream = _streams[tarckId];
+
+            // The end of the physical stream.
+            var physicalEnd = _physByteRangeEnd.Value;
+
+            var startBytePos = _physByteRangeStart;
+            var endBytePos = physicalEnd;
+
+            // Bisection
+            while (true)
+            {
+                // Find the middle of the upper and lower byte search range.
+                var midBytePos = (startBytePos + endBytePos) / 2;
+
+                // Seek to the middle of the byte range.
+                _reader.Seek(SeekOrigin.Begin, midBytePos);
+
+                // Read the next page.
+                _pages.NextPageForSerial(_reader, tarckId);
+
+                // Probe the page to get the start and end timestamp.
+                var (startTs, endTs)
+                    = stream.InspectPage(_pages.Page());
+
+                /*  debug!(
+                    "seek: bisect step: page={{ start={}, end={} }} byte_range=[{}..{}], mid={}",
+                    start_ts, end_ts, start_byte_pos, end_byte_pos, mid_byte_pos,
+                );
+                */
+                Debug.WriteLine(
+                    $"seek: bisect step: page={{ start={startTs}, end={endTs} }} byte_range=[{startBytePos}..{endBytePos}], mid={midBytePos}");
+
+                if (ts < startTs)
+                {
+                    // The timestamp is before the start of the page. Move the upper byte range
+                    // to the middle of the current byte range.
+                    endBytePos = midBytePos;
+                }
+                else if (ts > endTs)
+                {
+                    // The timestamp is after the end of the page. Move the lower byte range
+                    // to the middle of the current byte range.
+                    startBytePos = midBytePos;
+                }
+                else
+                {
+                    // The sample with the required timestamp is contained in page1. Return the
+                    // byte position for page0, and the timestamp of the first sample in page1, so
+                    // that when packets from page1 are read, those packets will have a non-zero
+                    // base timestamp.
+                    break;
+                }
+
+                // Prevent infinite iteration and too many seeks when the search range is less
+                // than 2x the maximum page size.
+                if (endBytePos - startBytePos < 2 * OggPageHeader.OGG_PAGE_MAX_SIZE)
+                {
+                    // Seek to the start of the byte range.
+                    _reader.Seek(SeekOrigin.Begin, startBytePos);
+
+                    // Read the next page.
+                    _pages.NextPageForSerial(_reader, tarckId);
+                    break;
+                }
+            }
+
+            // Reset all logical bitstreams since the physical stream will be reading from a new
+            // location now.
+            foreach (var kvp in _streams)
+            {
+                var s = kvp.Key;
+                kvp.Value.Reset();
+
+                // Read in the current page since it contains our timestamp.
+                if (s == tarckId)
+                {
+                    kvp.Value.ReadPage(_pages.Page());
+                }
+            }
+        }
+
+        // Consume packets until reaching the desired timestamp.
+        ulong actualTs;
+        while (true)
+        {
+            var packet = PeekLogicalPacket();
+            if (packet is not null)
+            {
+                if (packet.TrackId == tarckId && packet.Ts + packet.Dur > ts)
+                {
+                    actualTs = packet.Ts;
+                    break;
+                }
+
+                DiscardLogicalPacket();
+            }
+            else
+            {
+                ReadPage();
+            }
+        }
+
+        /*
+        debug!(
+            "seeked track={:#x} to packet_ts={} (delta={})",
+            serial,
+            actual_ts,
+            actual_ts as i64 - required_ts as i64
+        );*/
+        Debug.WriteLine(
+            $"seeked track={tarckId:X} to packet_ts={actualTs} (delta={actualTs - ts})");
+
+        return new SeekedTo(
+            TrackId: tarckId,
+            RequiredTs: ts,
+            ActualTs: actualTs
+        );
+    }
+
+    private void DiscardLogicalPacket()
+    {
+        var page = _pages.Page();
+        if(_streams.TryGetValue(page.Header.Serial, out var stream))
+        {
+            stream.ConsumePacket();
+        }
+    }
+
+    private Packet? PeekLogicalPacket()
+    {
+        var page = _pages.Page();
+        
+        if(_streams.TryGetValue(page.Header.Serial, out var stream))
+        {
+            return stream.PeekPacket();
+        }
+
+        return null;
+    }
+
     private bool ReadPage()
     {
         // Try reading pages until a page is successfully read, or an IO error.
@@ -264,3 +478,15 @@ public sealed class OggReader : IDisposable
         _reader.Dispose();
     }
 }
+
+public enum SeekMode
+{
+    Coarse,
+    Accurate
+}
+
+public record struct SeekToTime(SeekMode Mode, TimeSpan Time, uint? TrackId);
+
+public record struct SeekToTimestamp(SeekMode Mode, ulong Timestamp, uint TrackId);
+
+public record SeekedTo(uint TrackId, ulong RequiredTs, ulong ActualTs);

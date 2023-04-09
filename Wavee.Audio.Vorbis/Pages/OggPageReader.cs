@@ -199,4 +199,25 @@ internal sealed class OggPageReader
             }
         }
     }
+
+    /// <summary>
+    /// Reads the next page with a specific serial.
+    /// If the next page is corrupted or invalid, the
+    /// page is discarded and the reader tries again
+    /// until a valid page is read or end-of-stream.
+    /// </summary>
+    /// <param name="reader"></param>
+    /// <param name="serial"></param>
+    /// <typeparam name="B"></typeparam>
+    public void NextPageForSerial<B>(B reader, uint serial)
+    where B : IReadBytes, ISeekBuffered
+    {
+        while (true)
+        {
+            TryNextPage(reader);
+            // Exit if a page with the specific serial is found.
+            if (_header.Serial == serial)
+                break;
+        }
+    }
 }

@@ -18,6 +18,7 @@ internal interface IMapper
     bool TryMakeParser(out VorbisPacketParser o);
     CodecParameters CodecParams();
     void UpdateCodecParams(CodecParameters o);
+    void Reset();
 }
 
 public interface IPacketParser

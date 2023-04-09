@@ -26,4 +26,9 @@ internal class NullMapper : IMapper
     {
         throw new NotImplementedException();
     }
+
+    public void Reset()
+    {
+        throw new NotImplementedException();
+    }
 }

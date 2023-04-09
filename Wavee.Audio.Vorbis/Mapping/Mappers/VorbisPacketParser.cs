@@ -79,4 +79,9 @@ internal class VorbisPacketParser : IPacketParser
         _prevBsEx = curBsExp;
         return dur;
     }
+
+    public void Reset()
+    {
+        _prevBsEx = null;
+    }
 }

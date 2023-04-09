@@ -406,4 +406,65 @@ internal class OggLogicalStream
         o = null;
         return false;
     }
+
+    public (ulong startTs, ulong endTs) InspectPage(OggPage page)
+    {
+        var startDelay = _startBound?.Delay ?? 0;
+
+        // Get the cumulative duration of all packets in the page.
+        ulong pageDur = 0;
+
+        if (_mapper.TryMakeParser(out var parser))
+        {
+            using var iter = page.Packets();
+            while (iter.MoveNext())
+            {
+                var buf = iter.Current;
+                var packetDur = parser.ParseNextPacketDur(buf.Span);
+                pageDur = (uint)Math.Min((ulong)pageDur + packetDur,
+                    uint.MaxValue);
+            }
+        }
+
+        // If this is the final page, get the end delay.
+        ulong endDelay = 0;
+        if (page.Header.IsLastPage)
+        {
+            endDelay = _endBound?.Delay ?? 0;
+        }
+
+        var totalDelay = startDelay + endDelay;
+
+        // Add the total delay to the page end timestamp.
+        var pageEndTs = _mapper.AbsGpToTs(page.Header.AbsGp) + totalDelay;
+
+        // Get the page start timestamp of the page by subtracting the cumulative packet duration.
+        var pageStartTs = pageEndTs - pageDur;
+
+        if (!_gapless)
+        {
+            return (pageStartTs, pageEndTs);
+        }
+
+        return (pageStartTs - totalDelay, pageEndTs - totalDelay);
+    }
+
+    public void Reset()
+    {
+        _partLen = 0;
+        _prevPageInfo = null;
+        _packets.Clear();
+        _mapper.Reset();
+    }
+
+    public void ConsumePacket()
+    {
+        _packets.TryDequeue(out _);
+    }
+
+    public Packet PeekPacket()
+    {
+        if (_packets.TryPeek(out var pk)) return pk;
+        return null;
+    }
 }

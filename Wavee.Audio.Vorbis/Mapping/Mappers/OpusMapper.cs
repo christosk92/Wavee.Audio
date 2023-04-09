@@ -32,4 +32,9 @@ internal sealed class OpusMapper : IMapper
     {
         throw new NotImplementedException();
     }
+
+    public void Reset()
+    {
+        throw new NotImplementedException();
+    }
 }

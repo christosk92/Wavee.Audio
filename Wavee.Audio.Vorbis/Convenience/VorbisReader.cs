@@ -15,13 +15,17 @@ public sealed class VorbisReader : IDisposable
 
     private SampleBuffer<float>? _sampleBuffer;
 
-    public VorbisReader(Stream reader, bool disposeOnClose)
+    public VorbisReader(Stream reader,
+        bool gapless,
+        bool disposeOnClose)
     {
         _reader = reader;
         _disposeOnClose = disposeOnClose;
         _mediaSourceStream = new MediaSourceStream(reader,
             new MediaSourceStreamOptions(64 * 1024));
-        _oggReader = new OggReader(_mediaSourceStream, new FormatOptions());
+        _oggReader = new OggReader(_mediaSourceStream, new FormatOptions(
+            EnableGapless: gapless
+        ));
         _decoder = new VorbisDecoder(_oggReader.DefaultTrack!.CodecParameters,
             new DecoderOptions(false));
     }
@@ -31,21 +35,32 @@ public sealed class VorbisReader : IDisposable
 
     public ReadOnlySpan<byte> ReadSamples()
     {
-        var packet = _oggReader.NextPacket();
-        var decoded = _decoder.Decode(packet);
-        if (_sampleBuffer is null)
+        try
         {
-            _sampleBuffer = new SampleBuffer<float>(
-                (ulong)decoded.Capacity(),
-                decoded.Spec());
-        }
+            var packet = _oggReader.NextPacket();
+            var decoded = _decoder.Decode(packet);
+            if (_sampleBuffer is null)
+            {
+                _sampleBuffer = new SampleBuffer<float>(
+                    (ulong)decoded.Capacity(),
+                    decoded.Spec());
+            }
 
-        _sampleBuffer.CopyInterleavedRef(decoded);
-        var samples = _sampleBuffer.Samples();
-        var bytes = MemoryMarshal.Cast<float, byte>(samples);
-        return bytes;
+            _sampleBuffer.CopyInterleavedRef(decoded);
+            var samples = _sampleBuffer.Samples();
+            var bytes = MemoryMarshal.Cast<float, byte>(samples);
+            return bytes;
+        }
+        catch (EndOfStreamException)
+        {
+            return ReadOnlySpan<byte>.Empty;
+        }
     }
 
+    public void Seek(TimeSpan to)
+    {
+        _oggReader.Seek(new SeekToTime(SeekMode.Accurate, to, null));
+    }
 
     public void Dispose()
     {

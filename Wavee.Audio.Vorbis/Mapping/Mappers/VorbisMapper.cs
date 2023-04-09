@@ -282,6 +282,11 @@ internal sealed class VorbisMapper : IMapper
         _codecParameters = o;
     }
 
+    public void Reset()
+    {
+        if (_parser is not null) _parser.Reset();
+    }
+
     private bool ReadSetup(BufReader reader, IdentHeader identHeader, out Mode[] o)
     {
         // The packet type must be an setup header.
