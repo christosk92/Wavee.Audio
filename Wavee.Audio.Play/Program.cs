@@ -14,7 +14,7 @@ using Wavee.Audio.Vorbis;
 
 while (true)
 {
-    var testFile = "C:\\Users\\chris-pc\\Downloads\\ifeelyou.ogg";
+    var testFile = "C:\\Users\\ckara\\Downloads\\ifeelyou.ogg";
     var fs = File.Open(testFile, FileMode.Open, FileAccess.Read, FileShare.Read);
     var sw = Stopwatch.StartNew();
     var mss = new MediaSourceStream(fs, new MediaSourceStreamOptions(64 * 1024));
@@ -92,9 +92,9 @@ sealed class AudioOutput
         _sampleBuffer.CopyInterleavedRef(decoded);
         var samples = _sampleBuffer.Samples();
         //convert float to byte
-        var bytes = MemoryMarshal.Cast<float, byte>(samples).ToArray();
-
-
+        //var bytes = MemoryMarshal.Cast<float, byte>(samples).ToArray();
+        var bytes = new byte[samples.Length * sizeof(float)];
+        Buffer.BlockCopy(samples.ToArray(), 0, bytes, 0, bytes.Length);
         _bufferedWaveProvider.AddSamples(bytes, 0,
             bytes.Length);
         while (_bufferedWaveProvider.BufferedDuration.TotalSeconds > 0.5)

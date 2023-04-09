@@ -85,10 +85,10 @@ public sealed class DspChannel
             {
                 // Both the previous and current blocks are either short or long. In this case,
                 // there is a complete overlap between.
-                OverlapAdd(buf, _overlap.Slice(0, bs / 2)
-                        .Span,
-                    _imdct.Slice(0, bs / 2)
-                        .Span, win);
+                OverlapAdd(buf,
+                    _overlap[..(bs / 2)].Span,
+                    _imdct[..(bs / 2)].Span,
+                    win);
             }
             else if (lapState.PrevBlockFlag && !blockFlag)
             {
@@ -97,12 +97,14 @@ public sealed class DspChannel
                 int end = start + _bs0 / 2;
 
                 // Unity samples (no overlap).
-                buf.Slice(0, start).CopyTo(_overlap.Slice(0, start).Span);
+                //buf[..start].CopyTo(_overlap.Slice(0, start).Span);
+                _overlap[..start].Span.CopyTo(buf[..start]);
 
                 // Overlapping samples.
-                OverlapAdd(buf.Slice(start),
-                    _overlap.Slice(start, end - start).Span,
-                    _imdct.Slice(0, _bs0 / 2).Span, win);
+                OverlapAdd(buf[start..],
+                    _overlap[start..end].Span,
+                    _imdct[..(_bs0 / 2)].Span,
+                    win);
             }
             else
             {
@@ -111,11 +113,15 @@ public sealed class DspChannel
                 int end = start + _bs0 / 2;
 
                 // Overlapping samples.
-                OverlapAdd(buf.Slice(0, _bs0 / 2), _overlap.Slice(0, _bs0 / 2).Span,
-                    _imdct.Slice(start, end - start).Span, win);
+                OverlapAdd(buf[..(_bs0 / 2)],
+                    _overlap[..(_bs0 / 2)].Span,
+                    _imdct[start..end].Span,
+                    win);
 
                 // Unity samples (no overlap).
-                _imdct.Slice(end, _bs1 / 2 - end).Span.CopyTo(buf.Slice(_bs0 / 2));
+                // _imdct.Slice(end, _bs1 / 2 - end).Span.CopyTo(buf.Slice(_bs0 / 2));
+                //                buf[self.bs0 / 2..].copy_from_slice(&self.imdct[end..self.bs1 / 2]);
+                _imdct[end..(_bs1 / 2)].Span.CopyTo(buf[(_bs0 / 2)..]);
             }
 
 
@@ -138,11 +144,11 @@ public sealed class DspChannel
 
         for (int i = 0; i < left.Length; i++)
         {
-            float s0 = left[i];
-            float s1 = right[i];
-            float w0 = win[win.Length - i - 1];
-            float w1 = win[i];
-            output[i] = s0 * w0 + s1 * w1;
+            double s0 = left[i];
+            double s1 = right[i];
+            double w0 = win[win.Length - i - 1];
+            double w1 = win[i];
+            output[i] = (float)(s0 * w0 + s1 * w1);
         }
     }
 }

@@ -1,5 +1,6 @@
-﻿
-using FftSharp;
+﻿using System.Numerics;
+using MathNet.Numerics;
+using MathNet.Numerics.IntegralTransforms;
 
 namespace Wavee.Audio.Vorbis;
 
@@ -7,7 +8,7 @@ public class Imdct
 {
     private int _n2;
 
-    private Complex[] _twiddle;
+    private Complex32[] _twiddle;
 
     /// <summary>
     /// Instantiate a N-point IMDCT with a given scale factor.
@@ -22,7 +23,7 @@ public class Imdct
         _n2 = n / 2;
 
         // Pre-compute the twiddle factors.
-        var twiddle = new Complex[_n2];
+        var twiddle = new Complex32[_n2];
 
         //        let alpha = 1.0 / 8.0 + if scale.is_sign_positive() { 0.0 } else { n2 as f64 };
         var alpha = 1.0 / 8.0 + (scale > 0 ? 0.0 : _n2);
@@ -31,10 +32,10 @@ public class Imdct
 
         for (var k = 0; k < _n2; k++)
         {
-            var theta = pi_n * (alpha + k);
+            var theta = pi_n * (alpha + (double)k);
             var re = Math.Cos(theta) * sqrtScale;
             var im = Math.Sin(theta) * sqrtScale;
-            twiddle[k] = new Complex(re, im);
+            twiddle[k] = new Complex32((float)re, (float)im);
         }
 
         _twiddle = twiddle;
@@ -67,7 +68,7 @@ public class Imdct
             throw new ArgumentException("The output length must be 2x the spectrum length.");
         // Pre-FFT twiddling and packing of the real input signal values into complex signal values.
 
-        var scratch = new Complex[_n2];
+        var scratch = new Complex32[_n2];
         for (int i = 0; i < _n2; i++)
         {
             var even = spec[i * 2];
@@ -76,11 +77,11 @@ public class Imdct
 
             var re = odd * w.Imaginary - even * w.Real;
             var im = odd * w.Real + even * w.Imaginary;
-            scratch[i] = new Complex(re, im);
+            scratch[i] = new Complex32(re, im);
         }
 
-        // Fourier.Forward(scratch, FourierOptions.NoScaling);
-        FftSharp.Transform.FFT(scratch);
+        Fourier.Forward(scratch, FourierOptions.NoScaling);
+        // FftSharp.Transform.FFT(scratch);
         // Split the output vector (2N samples) into 4 vectors (N/2 samples each).
         var vec0 = output.Slice(0, n2);
         var vec1 = output.Slice(n2, n2);
@@ -92,7 +93,7 @@ public class Imdct
         for (int i = 0; i < n4; i++)
         {
             var x = scratch[i].Conjugate();
-            var w = new Complex((float)_twiddle[i].Real, (float)_twiddle[i].Imaginary);
+            var w = new Complex32((float)_twiddle[i].Real, (float)_twiddle[i].Imaginary);
             var val = w * x;
 
             int fi = 2 * i;
@@ -107,7 +108,7 @@ public class Imdct
         for (int i = 0; i < n4; i++)
         {
             var x = scratch[n4 + i].Conjugate();
-            var w = new Complex(_twiddle[n4 + i].Real, _twiddle[n4 + i].Imaginary);
+            var w = new Complex32(_twiddle[n4 + i].Real, _twiddle[n4 + i].Imaginary);
             var val = w * x;
 
             int fi = 2 * i;
@@ -127,6 +128,7 @@ public class Imdct
             a.Real * b.Imaginary + a.Imaginary * b.Real);
     }
 }
+
 public static class ComplexExtensions
 {
     public static Complex Conjugate(this Complex c)
