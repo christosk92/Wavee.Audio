@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using Wavee.Audio.Codebook;
 using Wavee.Audio.Codebooks;
 using Wavee.Audio.IO;
 
@@ -6,14 +7,14 @@ namespace Wavee.Audio.Vorbis.Decoding;
 
 internal class VorbisCodebook
 {
-    private VorbisCodebook(Codebook codebook, ushort codebooksDimensions, float[]? vqVec)
+    private VorbisCodebook(Codebook<uint, uint> codebook, ushort codebooksDimensions, float[]? vqVec)
     {
         Codebook = codebook;
         CodebooksDimensions = codebooksDimensions;
         VqVec = vqVec;
     }
 
-    public Codebook Codebook { get; }
+    public Codebook<uint, uint> Codebook { get; }
     public ushort CodebooksDimensions { get; }
     public float[]? VqVec { get; }
 

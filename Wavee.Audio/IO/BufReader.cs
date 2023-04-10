@@ -25,6 +25,28 @@ public sealed class BufReader : IReadBytes
         return bytes;
     }
 
+    public ReadOnlySpan<byte> ReadDoubleBytes()
+    {
+        if (_buf.Length - _pos < 2)
+            throw new InternalBufferOverflowException("Not enough bytes in buffer");
+
+        Span<byte> bytes = new byte[2];
+        _buf.AsSpan(_pos, 2).CopyTo(bytes);
+        _pos += 2;
+        return bytes;
+    }
+
+    public ReadOnlySpan<byte> ReadTripleBytes()
+    {
+        if (_buf.Length - _pos < 3)
+            throw new InternalBufferOverflowException("Not enough bytes in buffer");
+
+        Span<byte> bytes = new byte[3];
+        _buf.AsSpan(_pos, 3).CopyTo(bytes);
+        _pos += 3;
+        return bytes;
+    }
+
     public byte ReadByte()
     {
         if (_buf.Length - _pos < 1)
@@ -60,5 +82,10 @@ public sealed class BufReader : IReadBytes
         var pos = _pos;
         _pos = _buf.Length;
         return _buf.AsMemory(pos);
+    }
+
+    public ulong BytesAvailable()
+    {
+        return (ulong)(_buf.Length - _pos);
     }
 }

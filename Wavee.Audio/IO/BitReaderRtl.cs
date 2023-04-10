@@ -1,6 +1,7 @@
 ﻿using System.Buffers.Binary;
 using System.Diagnostics;
 using System.Drawing;
+using Wavee.Audio.Codebook;
 using Wavee.Audio.Codebooks;
 
 namespace Wavee.Audio.IO;
@@ -110,7 +111,8 @@ public sealed class BitReaderRtl
         }
     }
 
-    public (uint, uint) ReadCodebook(Codebook codebook)
+    public (TValueType, uint) ReadCodebook<TValueType>(Codebook<TValueType, uint> codebook) 
+        where TValueType : unmanaged
     {
         if (_nBitsLeft < codebook.MaxCodeLength)
         {
@@ -129,7 +131,7 @@ public sealed class BitReaderRtl
 
         uint consumed = 0;
 
-        while (entry.IsJump())
+        while (entry.IsJump)
         {
             // Consume the bits used for the initial or previous jump iteration.
             consumed += blockLen;
@@ -142,19 +144,19 @@ public sealed class BitReaderRtl
             }
 
             //prepare for next jump
-            blockLen = entry.JumpLen();
+            blockLen = entry.JumpLen;
             // ulong index = bits >> (64 - (int)blockLen);
             //
             // let index = bits & ((1 << block_len) - 1);
             ulong index = bits & (((ulong)1 << (int)blockLen) - 1);
 
             // Jump to the next entry.
-            var jmp = entry.JumpOffset();
+            var jmp = entry.JumpOffset;
             entry = codebook.Table[jmp + (int)index];
         }
 
         // The entry is always a value entry at this point. Consume the bits containing the value.
-        consumed += entry.ValueLen();
+        consumed += entry.ValueLen;
 
         if (consumed > numBitsLeft)
         {

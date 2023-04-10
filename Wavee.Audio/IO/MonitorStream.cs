@@ -6,7 +6,7 @@ namespace Wavee.Audio.IO;
 /// A <see cref="MonitorStream"/> is a passive stream that observes all operations performed on the inner
 /// stream and forwards an immutable reference of the result to a [`Monitor`].
 /// </summary>
-public sealed class MonitorStream<B, M> : IReadBytes where B : IReadBytes, ISeekBuffered where M : IMonitor
+public sealed class MonitorStream<B, M> : IReadBytes where B : IReadBytes where M : IMonitor
 {
     private readonly B _inner;
     private readonly M _monitor;
@@ -19,10 +19,26 @@ public sealed class MonitorStream<B, M> : IReadBytes where B : IReadBytes, ISeek
 
     public M Monitor => _monitor;
     public B Inner => _inner;
-    
+
     public ReadOnlySpan<byte> ReadQuadBytes()
     {
-        throw new NotImplementedException();
+        var bytes = _inner.ReadQuadBytes();
+        _monitor.ProcessQuadBytes(bytes);
+        return bytes;
+    }
+
+    public ReadOnlySpan<byte> ReadDoubleBytes()
+    {
+        var bytes = _inner.ReadDoubleBytes();
+        _monitor.ProcessDoubleBytes(bytes);
+        return bytes;
+    }
+
+    public ReadOnlySpan<byte> ReadTripleBytes()
+    {
+        var bytes = _inner.ReadTripleBytes();
+        _monitor.ProcessTripleBytes(bytes);
+        return bytes;
     }
 
     public byte ReadByte()
@@ -57,4 +73,25 @@ public interface IMonitor
 {
     void ProcessByte(byte b);
     void ProcessBufBytes(ReadOnlySpan<byte> buf);
+
+    void ProcessQuadBytes(ReadOnlySpan<byte> buf)
+    {
+        ProcessByte(buf[0]);
+        ProcessByte(buf[1]);
+        ProcessByte(buf[2]);
+        ProcessByte(buf[3]);
+    }
+
+    void ProcessDoubleBytes(ReadOnlySpan<byte> buf)
+    {
+        ProcessByte(buf[0]);
+        ProcessByte(buf[1]);
+    }
+
+    void ProcessTripleBytes(ReadOnlySpan<byte> buf)
+    {
+        ProcessByte(buf[0]);
+        ProcessByte(buf[1]);
+        ProcessByte(buf[2]);
+    }
 }

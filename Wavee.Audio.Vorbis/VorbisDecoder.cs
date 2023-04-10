@@ -620,5 +620,3 @@ public class Windows
         return slope;
     }
 }
-
-public record DecoderOptions(bool Verify);

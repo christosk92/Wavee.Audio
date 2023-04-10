@@ -1,4 +1,6 @@
-﻿namespace Wavee.Audio.IO;
+﻿using System.Buffers.Binary;
+
+namespace Wavee.Audio.IO;
 
 public interface IReadBytes
 {
@@ -7,6 +9,10 @@ public interface IReadBytes
     /// </summary>
     /// <returns></returns>
     ReadOnlySpan<byte> ReadQuadBytes();
+
+    ReadOnlySpan<byte> ReadDoubleBytes();
+
+    ReadOnlySpan<byte> ReadTripleBytes();
 
     /// <summary>
     /// Reads a single byte from the stream and returns it or an error.
@@ -27,4 +33,17 @@ public interface IReadBytes
     ulong Pos();
 
     void IgnoreBytes(ulong count);
+
+    /// <summary>
+    /// Reads three bytes from the stream and interprets them as an unsigned 24-bit big-endian
+    /// integer or returns an error.
+    /// </summary>
+    /// <returns></returns>
+    /// <exception cref="NotImplementedException"></exception>
+    uint ReadBeU24()
+    {
+        Span<byte> buf = stackalloc byte[sizeof(uint)];
+        ReadTripleBytes().CopyTo(buf[0..3]);
+        return BinaryPrimitives.ReadUInt32BigEndian(buf) >> 8;
+    }
 }

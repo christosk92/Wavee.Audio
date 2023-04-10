@@ -2,15 +2,28 @@
 
 using System.Diagnostics;
 using NAudio.Wave;
+using Wavee.Audio;
+using Wavee.Audio.Formats;
+using Wavee.Audio.IO;
+using Wavee.Audio.Mp3;
 using Wavee.Audio.Vorbis.Convenience;
 
 
+// var mp3TestFile = "C:\\Users\\chris-pc\\Music\\loveistiming.mp3";
+// using var fs = File.OpenRead(mp3TestFile);
+// var mss = new MediaSourceStream(fs, new MediaSourceStreamOptions(64 * 1024));
+//
+// var mpegReader = new MpaReader(mss, new FormatOptions());
+// var mpegDecoder = new MpaDecoder(mpegReader.DefaultTrack.CodecParameters, new DecoderOptions(false));
+// var packet = mpegReader.NextPacket();
+// var buf = mpegDecoder.Decode(packet);
+//
 
 ManualResetEvent _waitForPlayback = new ManualResetEvent(false);
 AudioOutput? output = default;
 Task.Run(() =>
 {
-    var testFile = "C:\\Users\\ckara\\Downloads\\ifeelyou.ogg";
+    var testFile = "C:\\Users\\chris-pc\\Downloads\\ifeelyou.ogg";
     var fs = File.Open(testFile, FileMode.Open, FileAccess.Read, FileShare.Read);
     var sw = Stopwatch.StartNew();
     var reader = new VorbisReader(fs,
@@ -103,6 +116,7 @@ sealed class AudioOutput : IDisposable
     {
         _wavePlayer.Pause();
     }
+
     public void Play()
     {
         _wavePlayer.Play();

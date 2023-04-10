@@ -84,6 +84,7 @@ public class MediaSourceStream : IReadBytes, ISeekBuffered, IDisposable
 
         _inner = source;
         _ring = new byte[options.BufferLength];
+        _ringMask = options.BufferLength - 1;
         _readPos = 0;
         _writePos = 0;
         _readBlockLen = MIN_BLOCK_LEN;
@@ -120,6 +121,48 @@ public class MediaSourceStream : IReadBytes, ISeekBuffered, IDisposable
             }
         }
 
+        return bytes;
+    }
+
+    public ReadOnlySpan<byte> ReadDoubleBytes()
+    {
+        Span<byte> bytes = new byte[2];
+        
+        var buf = ContinguousBuf();
+        if (buf.Length >= 2)
+        {
+            buf[..2].CopyTo(bytes);
+            Consume(2);
+        }
+        else
+        {
+            foreach (ref var b in bytes)
+            {
+                b = ReadByte();
+            }
+        }
+        
+        return bytes;
+    }
+
+    public ReadOnlySpan<byte> ReadTripleBytes()
+    {
+        Span<byte> bytes = new byte[3];
+        
+        var buf = ContinguousBuf();
+        if (buf.Length >= 3)
+        {
+            buf[..3].CopyTo(bytes);
+            Consume(3);
+        }
+        else
+        {
+            foreach (ref var b in bytes)
+            {
+                b = ReadByte();
+            }
+        }
+        
         return bytes;
     }
 

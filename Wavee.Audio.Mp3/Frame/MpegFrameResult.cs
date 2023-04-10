@@ -1,4 +1,4 @@
-﻿namespace Wavee.Audio.Mp3;
+﻿namespace Wavee.Audio.Mp3.Frame;
 
 internal readonly ref struct MpegFrameResult
 {

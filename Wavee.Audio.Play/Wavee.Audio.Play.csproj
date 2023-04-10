@@ -12,6 +12,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Wavee.Audio.Mp3\Wavee.Audio.Mp3.csproj" />
       <ProjectReference Include="..\Wavee.Audio.Vorbis\Wavee.Audio.Vorbis.csproj" />
     </ItemGroup>
 

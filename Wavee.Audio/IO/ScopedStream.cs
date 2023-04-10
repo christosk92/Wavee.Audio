@@ -29,6 +29,16 @@ public sealed class ScopedStream<T> : IReadBytes, ISeekBuffered where T : IReadB
         return _inner.ReadQuadBytes();
     }
 
+    public ReadOnlySpan<byte> ReadDoubleBytes()
+    {
+        throw new NotImplementedException();
+    }
+
+    public ReadOnlySpan<byte> ReadTripleBytes()
+    {
+        throw new NotImplementedException();
+    }
+
     public byte ReadByte()
     {
         if (_len - _read < 1)

@@ -1,4 +1,6 @@
-﻿using Wavee.Audio.Helpers.Extensions;
+﻿using System.Runtime.CompilerServices;
+using Wavee.Audio.Codebook;
+using Wavee.Audio.Helpers.Extensions;
 
 namespace Wavee.Audio.Codebooks;
 
@@ -38,7 +40,7 @@ public class CodebookBuilder
     /// <param name="values"></param>
     /// <returns></returns>
     /// <exception cref="NotImplementedException"></exception>
-    public Codebook Make(uint[] codeWords,
+    public Codebook<uint, uint> Make(uint[] codeWords,
         List<byte> codeLens,
         uint[] values)
     {
@@ -132,10 +134,10 @@ public class CodebookBuilder
             }
         }
 
-        var table = GenerateLut(_bitOrder, _isSparse, blocks);
-        var initBlockLen = table.Any() ? table[0].JumpLen() : 0;
+        var table = GenerateLut<uint, uint>(_bitOrder, _isSparse, blocks);
+        var initBlockLen = table.Any() ? table[0].JumpLen : 0;
 
-        return new Codebook
+        return new Codebook<uint, uint>
         {
             Table = table,
             MaxCodeLength = Math.Max(maxCodeLen, codeLens.Max()),
@@ -143,11 +145,13 @@ public class CodebookBuilder
         };
     }
 
-    private CodebookEntry[]
-        GenerateLut(BitOrder bitOrder, bool isSparse, List<CodebookBlock> blocks)
+    private ICodebookEntry<TValueType, TOffsetType>[]
+        GenerateLut<TValueType, TOffsetType>
+        (BitOrder bitOrder, bool isSparse, List<CodebookBlock> blocks)
+        where TOffsetType : unmanaged where TValueType : unmanaged
     {
         // The codebook table.
-        var table = new List<CodebookEntry>();
+        var table = new List<ICodebookEntry<TValueType, TOffsetType>>();
 
         var queue = new Queue<int>();
 
@@ -159,7 +163,9 @@ public class CodebookBuilder
 
             // The first entry in the table is always a jump to the first block.
             var block = blocks[0];
-            table.Add(CodebookEntry.NewJump(1, block.Width));
+            var one = (uint)1;
+            table.Add(CodebookEntryExt.NewJump<TValueType, TOffsetType>(Unsafe.As<uint, TValueType>(ref one),
+                block.Width));
             tableEnd += (uint)(1 << block.Width) + 1;
         }
 
@@ -180,7 +186,7 @@ public class CodebookBuilder
             var tableBase = table.Count;
 
             //Resize the table to fit the current block
-            table.AddRange(Enumerable.Repeat(new CodebookEntry(), blockLen));
+            table.AddRange(Enumerable.Repeat(CodebookEntryExt.Default<TValueType, TOffsetType>(), blockLen));
 
             // Push child blocks onto the queue and record the jump entries in the table. Jumps
             // will be in order of increasing prefix because of the implicit sorting provided
@@ -194,7 +200,7 @@ public class CodebookBuilder
                 var childBlockWidth = blocks[childBlockId].Width;
 
                 //VErify that the child block is not too large to fit in the current block.
-                if (tableEnd > CodebookEntry.JUMP_OFFEST_MAX)
+                if (tableEnd > Entry32x32.JumpOffestMax)
                     throw new NotSupportedException("Child block is too large to fit in the current block.");
 
 
@@ -213,7 +219,8 @@ public class CodebookBuilder
                 };
 
                 // Add a jump entry to table.
-                var jumpEntry = CodebookEntry.NewJump((uint)tableEnd, childBlockWidth);
+                var tableEndCast = Unsafe.As<uint, TValueType>(ref tableEnd);
+                var jumpEntry = CodebookEntryExt.NewJump<TValueType, TOffsetType>(tableEndCast, childBlockWidth);
                 table[(int)offset + tableBase] = jumpEntry;
 
                 // Increment the table end.
@@ -238,7 +245,10 @@ public class CodebookBuilder
                 var count = 1 << (int)numDncBits;
 
                 //the value to add to the table
-                var valueEntry = CodebookEntry.NewValue(value.Value, value.Width);
+                var valueVal = value.Value;
+                var valueEntry =
+                    CodebookEntryExt.NewValue<TValueType, TOffsetType>(Unsafe.As<uint, TValueType>(ref valueVal),
+                        value.Width);
 
                 switch (bitOrder)
                 {

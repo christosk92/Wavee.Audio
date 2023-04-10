@@ -9,6 +9,10 @@ public static class ReadBytesExtensions
     {
         return BinaryPrimitives.ReadUInt32BigEndian(reader.ReadQuadBytes());
     }
+    public static ushort ReadUShortBE<T>(this T reader) where T : IReadBytes
+    {
+        return BinaryPrimitives.ReadUInt16BigEndian(reader.ReadDoubleBytes());
+    }
 
     /// <summary>
     /// Reads eight bytes from the stream and interprets them as an unsigned 64-bit little-endian
