@@ -119,7 +119,7 @@ internal class VorbisCodebook
         //Read in 8-bit values
         builder.SetMaxBitsPerBlock(8);
 
-        var codebook = builder.Make(
+        var codebook = builder.Make<Entry32x32, uint, uint>(
             codeWords,
             codeLens,
             values

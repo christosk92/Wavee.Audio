@@ -40,16 +40,18 @@ public class CodebookBuilder
     /// <param name="values"></param>
     /// <returns></returns>
     /// <exception cref="NotImplementedException"></exception>
-    public Codebook<uint, uint> Make(uint[] codeWords,
+    public Codebook<TValueType, TOffsetType> Make<TEntry, TValueType, TOffsetType>(uint[] codeWords,
         List<byte> codeLens,
-        uint[] values)
+        TValueType[] values) where TEntry : ICodebookEntry<TValueType, TOffsetType>
+        where TOffsetType : unmanaged
+        where TValueType : unmanaged
     {
         if (codeWords.Length != codeLens.Count || codeWords.Length != values.Length)
         {
             throw new ArgumentException("The number of code words, code lengths, and values must be the same.");
         }
 
-        var blocks = new List<CodebookBlock>();
+        var blocks = new List<CodebookBlock<TValueType>>();
 
         byte maxCodeLen = 0;
 
@@ -60,7 +62,7 @@ public class CodebookBuilder
             var prefixMask = ~((~0U << _maxBitsPerBlock));
 
             // Push a root block.
-            blocks.Add(new CodebookBlock());
+            blocks.Add(new CodebookBlock<TValueType>());
 
             // Populate the tree
             foreach ((var (code, codeLen), var value) in codeWords
@@ -107,7 +109,7 @@ public class CodebookBuilder
                         block.Width = Math.Max(block.Width, _maxBitsPerBlock);
 
                         // Add the child block.
-                        blocks.Add(new CodebookBlock());
+                        blocks.Add(new CodebookBlock<TValueType>());
 
                         parentBlocKid = blockid;
                     }
@@ -121,7 +123,7 @@ public class CodebookBuilder
                 var finalBlock = blocks[parentBlocKid];
 
                 // Add the value to the block.
-                finalBlock.Values.Add(new CodebookValue
+                finalBlock.Values.Add(new CodebookValue<TValueType>
                 {
                     Prefix = finalPrefix,
                     Width = len,
@@ -134,10 +136,10 @@ public class CodebookBuilder
             }
         }
 
-        var table = GenerateLut<uint, uint>(_bitOrder, _isSparse, blocks);
+        var table = GenerateLut<TValueType, TOffsetType>(_bitOrder, _isSparse, blocks);
         var initBlockLen = table.Any() ? table[0].JumpLen : 0;
 
-        return new Codebook<uint, uint>
+        return new Codebook<TValueType, TOffsetType>
         {
             Table = table,
             MaxCodeLength = Math.Max(maxCodeLen, codeLens.Max()),
@@ -147,7 +149,7 @@ public class CodebookBuilder
 
     private ICodebookEntry<TValueType, TOffsetType>[]
         GenerateLut<TValueType, TOffsetType>
-        (BitOrder bitOrder, bool isSparse, List<CodebookBlock> blocks)
+        (BitOrder bitOrder, bool isSparse, List<CodebookBlock<TValueType>> blocks)
         where TOffsetType : unmanaged where TValueType : unmanaged
     {
         // The codebook table.
@@ -247,7 +249,7 @@ public class CodebookBuilder
                 //the value to add to the table
                 var valueVal = value.Value;
                 var valueEntry =
-                    CodebookEntryExt.NewValue<TValueType, TOffsetType>(Unsafe.As<uint, TValueType>(ref valueVal),
+                    CodebookEntryExt.NewValue<TValueType, TOffsetType>(valueVal,
                         value.Width);
 
                 switch (bitOrder)
